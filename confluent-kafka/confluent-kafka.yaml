@@ -161,7 +161,6 @@ spec:
       tls:
         enabled: true
 ---
-# kubectl create secret tls controlcenter-tls --cert=STAR_singhritesh85_com.crt --key=mykey.key -n confluent
 apiVersion: platform.confluent.io/v1beta1
 kind: ControlCenter
 metadata:
