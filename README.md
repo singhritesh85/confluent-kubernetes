@@ -39,3 +39,4 @@ kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=
 <img width="886" height="377" alt="image" src="https://github.com/user-attachments/assets/7f034b9b-8d15-4651-8cb3-c28b1aaf3842" />
 <img width="1825" height="580" alt="image" src="https://github.com/user-attachments/assets/9fc2c25f-1971-4f89-aa73-7cedf7f99210" />
 
+If you're planning to run a Kafka cluster on Kubernetes, it's worth considering the licensing and cost implications. Confluent Platform provides many enterprise features, but it is primarily geared toward commercial use and may involve licensing costs depending on your requirements. If you're looking for an open-source solution with a strong Kubernetes-native operator and lower cost considerations, I would recommend evaluating Strimzi as an alternative to Confluent Platform. Strimzi offers automated deployment, scaling, upgrades, and management of Apache Kafka on Kubernetes while remaining fully open source.
