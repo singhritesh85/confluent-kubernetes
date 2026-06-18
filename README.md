@@ -33,4 +33,6 @@ kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=
 <img width="1906" height="972" alt="image" src="https://github.com/user-attachments/assets/7ffd1a96-7715-485e-8d97-c2889dc4b356" />
 <img width="1902" height="971" alt="image" src="https://github.com/user-attachments/assets/c834edc6-41b2-4cad-889a-c72f1b6b962c" />
 <img width="1892" height="965" alt="image" src="https://github.com/user-attachments/assets/be978bea-9e7c-42a2-bd50-9e962276e250" />
+<img width="886" height="377" alt="image" src="https://github.com/user-attachments/assets/7f034b9b-8d15-4651-8cb3-c28b1aaf3842" />
+<img width="1825" height="580" alt="image" src="https://github.com/user-attachments/assets/9fc2c25f-1971-4f89-aa73-7cedf7f99210" />
 
