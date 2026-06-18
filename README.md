@@ -8,6 +8,7 @@ kubectl get pods -n confluent
 
 kubectl get crds | grep confluent
 ```
+<img width="977" height="571" alt="image" src="https://github.com/user-attachments/assets/f09898f4-c6d4-49ec-ad4d-6f02854d0db9" />
 ```
 cat kafka.ext
 
