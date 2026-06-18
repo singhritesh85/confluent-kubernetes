@@ -30,3 +30,7 @@ openssl req -new -key tls.key -out kafka.csr -subj "/CN=kafka.confluent.svc.clus
 openssl x509 -req -in kafka.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt -days 3650 -sha256 -extfile kafka.ext
 kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace confluent
 ```
+<img width="1906" height="972" alt="image" src="https://github.com/user-attachments/assets/7ffd1a96-7715-485e-8d97-c2889dc4b356" />
+<img width="1902" height="971" alt="image" src="https://github.com/user-attachments/assets/c834edc6-41b2-4cad-889a-c72f1b6b962c" />
+<img width="1892" height="965" alt="image" src="https://github.com/user-attachments/assets/be978bea-9e7c-42a2-bd50-9e962276e250" />
+
