@@ -34,18 +34,18 @@ stages:
                 fi
                 if [[ -z `/bin/bash -c "ls kafka.ext | grep kafka.ext | cut -f1"` ]]
                 then
-                  cat > kafka.ext <<-EOF
-                  authorityKeyIdentifier=keyid,issuer
-                  basicConstraints=CA:FALSE
-                  keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-                  subjectAltName = @alt_names
-                  
-                  [alt_names]
-                  DNS.1 = *.kafka.confluent.svc.cluster.local
-                  DNS.2 = *.kraftcontroller.confluent.svc.cluster.local
-                  DNS.3 = *.confluent.svc.cluster.local
-                  DNS.4 = localhost
-                  EOF
+                  {
+                    echo "authorityKeyIdentifier=keyid,issuer"
+                    echo "basicConstraints=CA:FALSE"
+                    echo "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment"
+                    echo "subjectAltName = @alt_names"
+                    echo
+                    echo "[alt_names]"
+                    echo "DNS.1 = *.kafka.confluent.svc.cluster.local"
+                    echo "DNS.2 = *.kraftcontroller.confluent.svc.cluster.local"
+                    echo "DNS.3 = *.confluent.svc.cluster.local"
+                    echo "DNS.4 = localhost"
+                  } > kafka.ext
                 fi
                 if [[ -z `/bin/bash -c "ls ca.key | grep ca.key | cut -f1"` ]]
                 then
