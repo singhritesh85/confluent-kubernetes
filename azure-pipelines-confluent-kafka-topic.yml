@@ -27,7 +27,7 @@ stages:
                 fi
                 if [[ -z `/bin/bash -c "kubectl get secrets -n producer-consumer|grep tls-kafka|cut -d ' ' -f1"` ]]
                 then
-                  kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace producer-consumer
+                  kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace=producer-consumer
                 fi
                 yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
