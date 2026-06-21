@@ -33,3 +33,5 @@ stages:
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
                 argocd app create kafka-topic --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./confluent-kafka-topic --dest-namespace confluent --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
                 #argocd app sync kafka-topic
+                argocd app create confluent-kafka-producer-consumer --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./confluent-kafka-producer-consumer --dest-namespace producer-consumer --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
+                #argocd app sync confluent-kafka-producer-consumer
