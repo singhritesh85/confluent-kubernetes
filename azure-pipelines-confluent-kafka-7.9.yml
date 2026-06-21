@@ -71,19 +71,9 @@ stages:
                 then
                   kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace confluent
                 fi
-                if [[ -z `/bin/bash -c "kubectl get namespaces|grep producer-consumer|cut -d ' ' -f1"` ]]
-                then
-                  kubectl create ns producer-consumer
-                fi
-                if [[ -z `/bin/bash -c "kubectl get secrets -n producer-consumer|grep tls-kafka|cut -d ' ' -f1"` ]]
-                then
-                  kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace producer-consumer
-                fi
                 yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
                 argocd app create kafka-with-kraft --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./confluent-kafka-7.9.0 --dest-namespace confluent --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
                 #argocd app sync kafka-with-kraft
                 kubectl get pods -n confluent
                 kubectl get svc -n confluent
-                argocd app create kafka-topic --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./confluent-kafka-topic --dest-namespace confluent --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
-                #argocd app sync kafka-topic
