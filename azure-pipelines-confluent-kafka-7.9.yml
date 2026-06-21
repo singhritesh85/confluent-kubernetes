@@ -7,11 +7,11 @@ pool:
   - agent.name -equals demo
 
 stages:
-- stage: KafkaDeployment7.9.0
-  displayName: KafkaDeployment7.9.0
+- stage: KafkaDeployment7_9_0
+  displayName: KafkaDeployment7_9_0
   jobs:
-  - deployment: KafkaDeployment7.9.0
-    displayName: KafkaDeployment7.9.0
+  - deployment: KafkaDeployment7_9_0
+    displayName: KafkaDeployment7_9_0
     environment: "dev"
     strategy:
       runOnce:
@@ -25,6 +25,59 @@ stages:
                 then
                   helm repo add confluentinc https://packages.confluent.io/helm
                   helm repo update
+                fi
+                if [[ -z `/bin/bash -c "helm ls -n confluent | grep confluent-operator | cut -f1"` ]]
+                then
+                  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --namespace confluent --create-namespace
+                  kubectl get pods -n confluent
+                  kubectl get crds | grep confluent
+                fi
+                if [[ -z `/bin/bash -c "ls kafka.ext | grep kafka.ext | cut -f1"` ]]
+                then
+                  cat > kafka.ext << EOF
+                  authorityKeyIdentifier=keyid,issuer
+                  basicConstraints=CA:FALSE
+                  keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+                  subjectAltName = @alt_names
+
+                  [alt_names]
+                  DNS.1 = *.kafka.confluent.svc.cluster.local
+                  DNS.2 = *.kraftcontroller.confluent.svc.cluster.local
+                  DNS.3 = *.confluent.svc.cluster.local
+                  DNS.4 = localhost
+                  EOF
+                fi
+                if [[ -z `/bin/bash -c "ls ca.key | grep ca.key | cut -f1"` ]]
+                then
+                  openssl genrsa -out ca.key 4096
+                fi
+                if [[ -z `/bin/bash -c "ls ca.crt | grep ca.crt | cut -f1"` ]]
+                then
+                  openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -subj "/CN=Confluent-Internal-CA" -out ca.crt
+                fi
+                if [[ -z `/bin/bash -c "ls tls.key | grep tls.key | cut -f1"` ]]
+                then
+                  openssl genrsa -out tls.key 2048
+                fi
+                if [[ -z `/bin/bash -c "ls kafka.csr | grep kafka.csr | cut -f1"` ]]
+                then
+                  openssl req -new -key tls.key -out kafka.csr -subj "/CN=kafka.confluent.svc.cluster.local"
+                fi
+                if [[ -z `/bin/bash -c "ls tls.crt | grep tls.crt | cut -f1"` ]]
+                then
+                  openssl x509 -req -in kafka.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt -days 3650 -sha256 -extfile kafka.ext
+                fi
+                if [[ -z `/bin/bash -c "kubectl get secrets -n confluent|grep tls-kafka|cut -d ' ' -f1"` ]]
+                then
+                  kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace confluent
+                fi
+                if [[ -z `/bin/bash -c "kubectl get namespaces|grep producer-consumer|cut -d ' ' -f1"` ]]
+                then
+                  kubectl create ns producer-consumer
+                fi
+                if [[ -z `/bin/bash -c "kubectl get secrets -n producer-consumer|grep tls-kafka|cut -d ' ' -f1"` ]]
+                then
+                  kubectl create secret generic tls-kafka --from-file=tls.crt=tls.crt --from-file=tls.key=tls.key --from-file=ca.crt=ca.crt --namespace producer-consumer
                 fi
                 yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
