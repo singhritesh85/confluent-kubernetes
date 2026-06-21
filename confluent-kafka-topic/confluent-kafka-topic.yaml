@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-demo-topic
+  namespace: confluent
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kafka-topic-create
+        image: confluentinc/cp-server:7.9.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cat <<EOF >/tmp/client.properties
+          security.protocol=SSL
+
+          ssl.truststore.type=PKCS12
+          ssl.truststore.location=/tmp/truststore.p12
+          ssl.truststore.password=Dexter@123
+
+          ssl.keystore.type=PKCS12
+          ssl.keystore.location=/tmp/keystore.p12
+          ssl.keystore.password=Dexter@123
+          ssl.key.password=Dexter@123
+          EOF
+
+          keytool -importcert \
+            -alias kafka-ca \
+            -file /etc/tls-certs/ca.crt \
+            -keystore /tmp/truststore.p12 \
+            -storetype PKCS12 \
+            -storepass Dexter@123 \
+            -noprompt
+
+          openssl pkcs12 -export \
+            -in /etc/tls-certs/tls.crt \
+            -inkey /etc/tls-certs/tls.key \
+            -out /tmp/keystore.p12 \
+            -name kafka-client \
+            -passout pass:Dexter@123
+
+          kafka-topics \
+            --bootstrap-server kafka.confluent.svc.cluster.local:9071 \
+            --command-config /tmp/client.properties \
+            --create \
+            --if-not-exists \
+            --topic demo-topic \
+            --partitions 3 \
+            --replication-factor 1
+
+          echo "Topic created successfully"
+
+        volumeMounts:
+        - name: tls-assets
+          mountPath: /etc/tls-certs
+          readOnly: true
+
+      volumes:
+      - name: tls-assets
+        secret:
+          secretName: tls-kafka
