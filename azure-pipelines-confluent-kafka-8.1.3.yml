@@ -1,0 +1,29 @@
+trigger:
+- none
+
+pool: 
+  name: demo
+  demands:
+  - agent.name -equals demo
+
+stages:
+- stage: KafkaDeployment7_9_0
+  displayName: KafkaDeployment7_9_0
+  jobs:
+  - deployment: KafkaDeployment7_9_0
+    displayName: KafkaDeployment7_9_0
+    environment: "dev"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          - task: CmdLine@2
+            inputs:
+              script: |
+                yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
+                argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
+                argocd app create kafka-with-kraft --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./confluent-kafka-8.1.3 --dest-namespace confluent --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
+                #argocd app sync kafka-with-kraft
+                kubectl get pods -n confluent
+                kubectl get svc -n confluent
