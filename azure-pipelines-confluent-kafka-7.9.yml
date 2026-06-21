@@ -34,7 +34,7 @@ stages:
                 fi
                 if [[ -z `/bin/bash -c "ls kafka.ext | grep kafka.ext | cut -f1"` ]]
                 then
-                  cat <<'EOF' > kafka.ext
+                  cat > kafka.ext <<'EOF'
                   authorityKeyIdentifier=keyid,issuer
                   basicConstraints=CA:FALSE
                   keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
