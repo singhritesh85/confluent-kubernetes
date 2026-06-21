@@ -1,0 +1,224 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftController
+metadata:
+  name: kraftcontroller
+  namespace: confluent
+spec:
+  replicas: 3
+  image:
+    application: confluentinc/cp-server:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  dataVolumeCapacity: 2Gi
+  tls:
+    secretRef: tls-kafka
+  listeners:
+    controller:
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+  configOverrides:
+    server:
+      - default.replication.factor=3
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+  namespace: confluent
+spec:
+  replicas: 3
+  image:
+    application: confluentinc/cp-server:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  dataVolumeCapacity: 2Gi
+  tls:
+    secretRef: tls-kafka
+  listeners:
+    internal:
+      authentication:
+        type: mtls
+        principalMappingRules:
+          - RULE:.*CN[\\s]?=[\\s]?([a-zA-Z0-9.]*)?.*/$1/
+      tls:
+        enabled: true
+    external:
+      authentication:
+        type: mtls
+        principalMappingRules:
+          - RULE:.*CN[\\s]?=[\\s]?([a-zA-Z0-9.]*)?.*/$1/
+      tls:
+        enabled: true
+  metricReporter:
+    enabled: true
+    authentication:
+      type: mtls
+    tls:
+      enabled: true
+  dependencies:
+    kRaftController:
+      clusterRef:
+        name: kraftcontroller
+        namespace: confluent
+      controllerListener:
+        authentication:
+          type: mtls
+        tls:
+          enabled: true
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Connect
+metadata:
+  name: connect
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: confluentinc/cp-server-connect:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  tls:
+    secretRef: tls-kafka
+  authentication:
+    type: mtls
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: SchemaRegistry
+metadata:
+  name: schemaregistry
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: confluentinc/cp-schema-registry:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  tls:
+    secretRef: tls-kafka
+  authentication:
+    type: mtls
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaRestProxy
+metadata:
+  name: kafkarestproxy
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: confluentinc/cp-kafka-rest:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  tls:
+    secretRef: tls-kafka
+  authentication:
+    type: mtls
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+    schemaRegistry:
+      url: https://schemaregistry.confluent.svc.cluster.local:8081
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KsqlDB
+metadata:
+  name: ksqldb
+  namespace: confluent
+spec:
+  replicas: 2
+  image:
+    application: confluentinc/cp-ksqldb-server:8.1.3
+    init: confluentinc/confluent-init-container:3.1.0
+  dataVolumeCapacity: 2Gi
+  tls:
+    secretRef: tls-kafka
+  authentication:
+    type: mtls
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ControlCenter
+metadata:
+  name: controlcenter
+  namespace: confluent
+spec:
+  replicas: 1
+  podTemplate:
+    probe:
+      startup:
+        periodSeconds: 10
+        failureThreshold: 30
+      liveness:
+        periodSeconds: 10
+        failureThreshold: 5
+        timeoutSeconds: 500
+      readiness:
+        periodSeconds: 10
+        failureThreshold: 5
+        timeoutSeconds: 500
+  image:
+    application: confluentinc/cp-enterprise-control-center-next-gen:2.3.0
+    init: confluentinc/confluent-init-container:3.1.0
+  dataVolumeCapacity: 2Gi
+  configOverrides:
+    server:
+      - confluent.controlcenter.rest.sni.host.check.enabled=false
+  externalAccess:
+    type: loadBalancer
+    loadBalancer:
+      domain: singhritesh85.com
+      prefix: confluent
+  tls:
+    secretRef: tls-kafka
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
+    connect:
+      - name: connect
+        url:  https://connect.confluent.svc.cluster.local:8083
+        authentication:
+          type: mtls
+        tls:
+          enabled: true
+    ksqldb:
+      - name: ksqldb
+        url:  https://ksqldb.confluent.svc.cluster.local:8088
+        authentication:
+          type: mtls
+        tls:
+          enabled: true
+    schemaRegistry:
+      url: https://schemaregistry.confluent.svc.cluster.local:8081
+      authentication:
+        type: mtls
+      tls:
+        enabled: true
