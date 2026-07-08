@@ -21,17 +21,6 @@ stages:
           - task: CmdLine@2
             inputs:
               script: |
-                if [[ -z `/bin/bash -c "helm repo list | grep kedacore | cut -f1"` ]]
-                then
-                  helm repo add kedacore https://kedacore.github.io/charts 
-                  helm repo update
-                fi
-                if [[ -z `/bin/bash -c "helm ls -n keda | grep keda | cut -f1"` ]]
-                then
-                  helm upgrade --install keda kedacore/keda --namespace keda --create-namespace 
-                  kubectl get pods -n keda
-                  kubectl get svc -n keda
-                fi
                 yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
                 argocd app create keda --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./keda-triggerauthentication-scaledobject --dest-namespace keda --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
