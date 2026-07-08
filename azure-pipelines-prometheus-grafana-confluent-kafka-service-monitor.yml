@@ -36,4 +36,4 @@ stages:
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
                 argocd app create prometheus-grafana-kafka-servicemonitor --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./service-monitor --dest-namespace monitoring --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
                 #argocd app sync prometheus-grafana-kafka-servicemonitor
-                kubectl get servicemonitors -n monitoring
+                kubectl get servicemonitor.monitoring.coreos.com -n monitoring
