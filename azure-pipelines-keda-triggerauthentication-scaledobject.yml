@@ -28,7 +28,7 @@ stages:
                 fi
                 if [[ -z `/bin/bash -c "helm ls -n keda | grep keda | cut -f1"` ]]
                 then
-                  helm install keda kedacore/keda --namespace keda --create-namespace 
+                  helm upgrade --install keda kedacore/keda --namespace keda --create-namespace 
                   kubectl get pods -n keda
                   kubectl get svc -n keda
                 fi
