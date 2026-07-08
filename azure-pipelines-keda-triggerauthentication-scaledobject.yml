@@ -36,5 +36,6 @@ stages:
                 argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
                 argocd app create keda --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./keda-triggerauthentication-scaledobject --dest-namespace keda --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
                 #argocd app sync keda
+                sleep 10
                 kubectl get scaledobjects -n producer-consumer
                 kubectl get triggerauthentication -n producer-consumer 
