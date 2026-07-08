@@ -1,0 +1,39 @@
+trigger:
+- none
+
+pool: 
+  name: demo
+  demands:
+  - agent.name -equals demo
+
+stages:
+- stage: PrometheusGrafanaKafkaServiceMonitor
+  displayName: PrometheusGrafanaKafkaServiceMonitor
+  jobs:
+  - deployment: PrometheusGrafanaKafkaServiceMonitor
+    displayName: PrometheusGrafanaKafkaServiceMonitor
+    environment: "dev"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          - task: CmdLine@2
+            inputs:
+              script: |
+                if [[ -z `/bin/bash -c "helm repo list | grep prometheus-community | cut -f1"` ]]
+                then
+                  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                  helm repo update
+                fi
+                if [[ -z `/bin/bash -c "helm ls -n monitoring | grep kube-prometheus-stack | cut -f1"` ]]
+                then
+                  helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+                  kubectl get pods -n monitoring
+                fi
+                yes|argocd login argocd.singhritesh85.com --username admin --password $(ARGOCD_PASSWORD) --grpc-web
+                argocd repo add https://github.com/singhritesh85/confluent-kubernetes.git --username $(GITHUB_USERNAME) --password $(GITHUB_PASSWORD)
+                argocd app create prometheus-grafana-kafka-servicemonitor --project default --repo https://github.com/singhritesh85/confluent-kubernetes.git --path ./service-monitor --dest-namespace monitoring --sync-option CreateNamespace=true --dest-server https://kubernetes.default.svc --sync-policy automated --upsert
+                #argocd app sync prometheus-grafana-kafka-servicemonitor
+                kubectl get pods -n monitoring
+                kubectl get svc -n monitoring
